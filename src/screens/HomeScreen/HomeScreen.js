@@ -5,15 +5,25 @@ import Sound from 'react-native-sound';
 import AudioRecord from 'react-native-audio-record';
 import { db, storage } from '../../config/firebase';
 import {Alert} from 'react-native';
-import Frontpage from '../../Animations/frontanimation'
+import Pending from "../Pending/pending";
+import {
+  BallIndicator,
+  BarIndicator,
+  DotIndicator,
+  MaterialIndicator,
+  PacmanIndicator,
+  PulseIndicator,
+  SkypeIndicator,
+  UIActivityIndicator,
+  WaveIndicator,
+} from 'react-native-indicators';
 import {
   StyleSheet,
   Text,
   View,
-  Button,
   TouchableOpacity,
   Image,
-  Slider
+  Slider,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';  
 var RNFetchBlob = require('react-native-fetch-blob').default
@@ -33,9 +43,9 @@ export default class HomeScreen extends Component {
   }
 
 
-  loading(){
-    this.setState({show:true})
-  }
+
+
+
 
   writeData= async (newData) =>{
     let dateTime = this.getDate()
@@ -68,23 +78,24 @@ export default class HomeScreen extends Component {
     state = {
         audioFile: '',
         recording: false,
+        pending:false,
         loaded: false,
         paused: true,
         started: true,
         show:false,
-        valueSlider: 50,
+        valueSlider: 0,
         plotData: [50, 10, 40, 95, -4, -24, null, 85, undefined, 0, 35, 53, -53, 24, 50, -20, -80],
     };
 
     
   async componentDidMount() {
+      this.setState({pending:false})
     await this.checkPermission();
 
     const options = {
         sampleRate: 44100,
         channels: 2,
         bitsPerSample: 16,
-        audioSource: 9,
         wavFile: 'test.wav'
     };
 
@@ -115,6 +126,7 @@ export default class HomeScreen extends Component {
   requestPermission = async () => {
       const p = await Permissions.request('microphone');
       console.log('permission request', p);
+      const p2 = await Permissions.request('vibrate');
   };
 
   start = () => {    
@@ -124,6 +136,7 @@ export default class HomeScreen extends Component {
   };
 
   uploadFiles(currentImage){
+      this.setState({pending:true})
       console.log("sending...")
       const image = currentImage
     
@@ -131,7 +144,6 @@ export default class HomeScreen extends Component {
       const fs = RNFetchBlob.fs
       window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest
       window.Blob = Blob
-
       const Fetch = RNFetchBlob.polyfill.Fetch
       // replace built-in fetch
       window.fetch = new Fetch({
@@ -184,13 +196,11 @@ export default class HomeScreen extends Component {
             ],
             {cancelable: false},
           );
-        })  
-    
-    }
-    componentWillMount(){
-      setTimeout( () => {this.loading()}, 5000);  
+        })
 
+    //this.endLoading();
     }
+
 
   guidGenerator() {
     var S4 = function() {
@@ -205,8 +215,13 @@ export default class HomeScreen extends Component {
         audio: url
       })
   }
+
+  endLoading=()=>{
+      this.setState({pending:false});
+}
   
   getResponse = async () => {
+      //this.endLoading();
     const response = await fetch('https://heart-sound-discrimination.herokuapp.com/predict?user_id='+userid)
     console.log(response)  
     console.log("Waiting for response...")
@@ -217,6 +232,7 @@ export default class HomeScreen extends Component {
       result: json
     })
     this.writeData(json)
+    this.setState({pending:false})
     this.props.navigation.navigate('result', { data: json})
   }
 
@@ -281,93 +297,75 @@ export default class HomeScreen extends Component {
     const { navigate } = this.props.navigation; 
     return (
       <View style={styles.page}>
-        {this.state.show ?
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Please plug your microphone and start recording...</Text>
-        {this.state.started ? (
-          <TouchableOpacity 
-            activeOpacity={0.5} 
-            onPress={this.start} 
-            title="Record" 
-            disabled={this.state.recording}
-            style={styles.recBtn}>
-            <Image
-              source={require('../../../imgs/record.png')}
-              style={styles.image}
-            />
-          </TouchableOpacity>
-          ):(
-          <TouchableOpacity 
-            activeOpacity={0.5} 
-            onPress={this.stop} 
-            title="Stop" 
-            disabled={!this.state.recording}
-            style={styles.recBtn}>
-            <Image
-              source={require('../../../imgs/stop.png')}
-              style={styles.image}
-            />
-          </TouchableOpacity>
-          )
-          }
-        <View style={styles.chartContainer}>
-          {/* <AreaChart
-            style={styles.chart}
-            data={plotData}
-            contentInset={{ top: 30, bottom: 30 }}
-            curve={shape.curveNatural}
-            svg={{ stroke: 'rgb(134, 65, 244)' }}
-          >
-            <Grid /> 
-          </AreaChart> */}
-        </View>
-        {/* <View style={styles.player}>
-          <Slider
-            step={1}
-            maximumValue={100}
-            onValueChange={this.change.bind(this)}
-            value={valueSlider}
-            style={styles.slider}
-          />
-          
-          {this.state.paused ? (
-            <TouchableOpacity 
-              activeOpacity={0.5} 
-              onPress={this.play} 
-              title="Play" 
-              disabled={!this.state.audioFile}
-            >
-              <Image
-                source={require('../../../imgs/play.png')}
-                style={styles.playImage}
-              />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity 
-              activeOpacity={0.5} 
-              onPress={this.pause} 
-              title="Pause" 
-              disabled={!this.state.audioFile}
-            >
-              <Image
-                source={require('../../../imgs/pause.png')}
-                style={styles.playImage}
-              />
-            </TouchableOpacity>
-          )}
-        </View>        */}
-      </View>
-      :
-        <View style={styles.page}>
-<Frontpage></Frontpage>
-      </View>
+        {!this.state.pending?<Text style={styles.welcome}>Record</Text>:null}
+          {!this.state.pending
+              ?
+        <View style={styles.container}>
 
-        }
+            {this.state.started ? (
+                <TouchableOpacity
+                    activeOpacity={0.5}
+                    onPress={this.start}
+                    onLongPress={()=>alert("Pressed")}
+                    title="Record"
+                    disabled={this.state.recording}
+                    style={styles.recBtn}>
+                    <Image
+                        source={require('../../../imgs/record.png')}
+                        style={styles.image}
+                    />
+                </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.5}
+                onPress={this.stop}
+                title="Stop"
+                disabled={!this.state.recording}
+                style={styles.stopBtn}>
+                <Image
+                    source={require('../../../imgs/animHeart3.gif')}
+                    style={styles.imageStop}
+                />
+                {/* <View style={styles.row}>
+                    <SkypeIndicator color='black' />
+                </View> */}
+              </TouchableOpacity>  
+            )
+            }
+              {this.state.paused ? (
+                <TouchableOpacity 
+                  activeOpacity={0.5} 
+                  onPress={this.play} 
+                  title="Play" 
+                  disabled={!this.state.audioFile}
+                >
+                  <View>  
+                      <Icon style={[{color: 'black'}]} size={25} name={'ios-play'}/>  
+                  </View>
+                </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity 
+                    activeOpacity={0.5} 
+                    onPress={this.pause} 
+                    title="Pause" 
+                    disabled={!this.state.audioFile}
+                  >
+                    <View>  
+                      <Icon style={[{color: 'black'}]} size={25} name={'ios-pause'}/>  
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>  
+            :
+            <View>
+                <Pending></Pending>
+            </View>
+            }
         </View>
-      
     );
   }
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -380,19 +378,32 @@ const styles = StyleSheet.create({
     flex:1,
     justifyContent: 'center'
   },
+  row: {
+        justifyContent: 'center',
+        alignItems: 'center'
+      },
   image: {
     marginTop: 10,
     width: 250,
     height: 250,
     resizeMode: 'stretch'
   },
+  imageStop: {
+    marginTop: 10,
+    width: 300,
+    height: 300,
+    resizeMode: 'stretch'
+  },
   recBtn: {
     marginBottom: 5,
   },
   welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    marginTop: 15,
+    marginBottom: 15,
+    justifyContent: 'flex-start'
     
   },
   playImage: {
@@ -406,15 +417,17 @@ const styles = StyleSheet.create({
     width: 200
   },
   slider: {
-    marginTop: 40,
-    width: 300,
-
+    width: "80%"
   },
   player: {
     flexDirection:'row', 
     flexWrap:'wrap',
     justifyContent: 'center',
     alignItems: 'center',
+    width: "52%", height: 30, borderRadius: 50,
+    borderWidth: 1,
+    marginTop: 40,
+    backgroundColor: '#696969'
   },
 });
 
