@@ -30,6 +30,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color : 'gray'
   },
+  container: {
+    padding: 20
+  },
+  subText: {
+    textAlign: 'justify'
+  }
 });
 
 this.state = {
@@ -42,29 +48,18 @@ const FourthScreen = ()  => {
     
     <ReactNativeSettingsPage>
     <SectionRow text='Information'>
-    <View style={styles.container}>
-    <Image
+      <View style={styles.container}>
+        <Text style={styles.titleText} onPress={this.onPressTitle}>Heart Sounds</Text>
+        <Text style={styles.subText}>Heart sounds are produced from a specific cardiac event such as closure of a valve or tensing of a chordae tendineae. Many pathologic cardiac conditions can be diagnosed by auscultation of the heart sounds.</Text>
+
+        <Text style={styles.titleText} onPress={this.onPressTitle}>{'\n'}Location</Text>
+        <Text style={styles.subText}>The location of the heart sound can help determine the etiology. The standard listening posts (aortic, pulmonic, tricuspid and mitral) apply to both heart sounds and murmurs.{'\n'}</Text>
+        <Image
           style={styles.image}
-          source={require('../../../imgs/vector_man.png')}
+          source={require('../../../imgs/heartPlaces.png')}
         />
-    <Text style={styles.baseText}>
-    <Text style={styles.titleText} onPress={this.onPressTitle}>
-          Device Placement{'\n'}{'\n'}
-        </Text>
-        <Text numberOfLines={5}>
-        {'\t'}  Close to the heart.
-        </Text>
-        <Text style={styles.titleText} onPress={this.onPressTitle}>
-        {'\n'}{'\n'}
-          Record Duration{'\n'}{'\n'}
-        </Text>
-        <Text numberOfLines={5}>
-        {'\t'}  One recording must be at least 3 seconds.{'\n'}{'\n'}
-        </Text>
-       
-      </Text>
-    </View>
-    </SectionRow>
+       </View>
+    </SectionRow> 
   </ReactNativeSettingsPage>
   );
 }
